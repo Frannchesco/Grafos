@@ -1,8 +1,6 @@
 /*
 ETAPA 1 - TRABALHO PRÁTICO ALGORITMOS EM GRAFOS - 06/04/2025 
-Leticia G. N. Morais e Luiz Francisco S. de Jesus
-  
-#problemas atuais: marcação dos vértices requeridos  
+Leticia G. N. Morais e Luiz Francisco   
   
 */
  
@@ -13,6 +11,7 @@ Leticia G. N. Morais e Luiz Francisco S. de Jesus
 #include <list>
 #include <sstream>
 #include <limits>
+#include <iomanip>
 
 using namespace std;
 
@@ -65,19 +64,12 @@ public:
     void marcarVerticeRequerido(int vertice) {
         verticesRequeridos[vertice] = true;
     }
-
-    void imprimirGrafo() { //só imprime a lista de adjacência, pq algumas matrizes são gigantescas
-        
-        cout << "\nLista de Adjacência:\n";
-        for (int i = 1; i <= V; ++i) {
-            cout << i << ": ";
-            for (auto& viz : adj[i]) {
-                cout << "(" << viz.first << ", " << viz.second << ") ";
-            }
-            cout << endl;
-        }
-        cout << endl;
-    }
+    
+    int getNumVeiculos() const { return numVeiculos; }
+    
+    int getCapacidade() const { return capacidade; }
+    
+    int getDeposito() const { return deposito; }
     
     int getNumVertices() const { return V; }
     
@@ -90,6 +82,7 @@ public:
 	int getNumArestasRequeridas() const { return ReqE; }
 	
 	int getNumArcosRequeridos() const { return ReqA; }
+	
 	
 	double calcularDensidade(int numVertices, int numArestas, int numArcos) const {
 		if (numVertices <= 1) return 0.0;
@@ -184,31 +177,6 @@ public:
 		return intermediacao;
 	}
 	
-	void imprimirEstatisticas() const {
-		cout << "\n====== Estatísticas do Grafo ======\n";
-		cout << "1. Número de vértices: " << getNumVertices() << endl;
-		cout << "2. Número de arestas: " << getNumArestas() << endl;
-		cout << "3. Número de arcos: " << getNumArcos() << endl;
-		cout << "4. Número de vértices requeridos: " << getNumVerticesRequeridos() << endl;
-		cout << "5. Número de arestas requeridas: " << getNumArestasRequeridas() << endl;
-		cout << "6. Número de arcos requeridos: " << getNumArcosRequeridos() << endl;
-		cout << "7. Densidade do grafo: " << calcularDensidade(getNumVertices(), getNumArestas(), getNumArcos()) << endl;
-		cout << "8. Grau mínimo: " << grauMinimo() << endl;
-		cout << "9. Grau máximo: " << grauMaximo() << endl;
-		cout << "10. Caminho médio: " << calcularCaminhoMedio() << endl;
-		cout << "11. Diâmetro do grafo: " << calcularDiametro() << endl;
-		cout << "12. Intermediação dos vértices:\n";
-
-		auto intermediacoes = calcularIntermediacao();
-		for (size_t vertice = 0; vertice < intermediacoes.size(); ++vertice) {
-		cout << "  Nó " << vertice << ": " << intermediacoes[vertice] << endl;
-	}
-
-
-		cout << "===================================\n";
-	}
-
-
 };
 
 Grafo lerGrafoDeArquivo(const string& nomeArquivo) {
@@ -233,8 +201,9 @@ Grafo lerGrafoDeArquivo(const string& nomeArquivo) {
         else if (linha.find("Capacity:") != string::npos) capacidade = stoi(linha.substr(linha.find(":") + 1));
         else if (linha.find("Depot Node:") != string::npos) deposito = stoi(linha.substr(linha.find(":") + 1));
     }
-
+	
     Grafo g(V);
+    
     g.V = V;
     g.E = E;
     g.A = A;
@@ -295,15 +264,70 @@ Grafo lerGrafoDeArquivo(const string& nomeArquivo) {
 }
 
 int main() {
-    string nomeArquivo = "BHW1.dat"; 
-    
-    Grafo g = lerGrafoDeArquivo(nomeArquivo);
-    
-    g.imprimirGrafo();
-    
-    g.floydWarshall(); //se não fizer essa chamada, dá erro de segmentação e aí não calc nada q precisa das matrizes dist e pred
-    
-    g.imprimirEstatisticas();
-    
+    vector<string> arquivos = {
+        "BHW1.dat", "BHW2.dat", "BHW3.dat", "BHW4.dat", "BHW5.dat", 
+        "BHW6.dat", "BHW7.dat", "BHW8.dat", "BHW9.dat", "BHW10.dat", 
+        "DI-NEARP-n240-Q4k.dat", "DI-NEARP-n240-Q8k.dat", "DI-NEARP-n240-Q16k.dat", 
+        "DI-NEARP-n422-Q2k.dat", "DI-NEARP-n422-Q4k.dat", "DI-NEARP-n422-Q8k.dat",
+        "DI-NEARP-n422-Q16k.dat", "DI-NEARP-n442-Q2k.dat", "DI-NEARP-n442-Q4k.dat", 
+        "mggdb_0.25_1.dat", "mggdb_0.25_2.dat", "mggdb_0.25_3.dat", "mggdb_0.25_4.dat",
+        "mggdb_0.25_5.dat", "mggdb_0.25_6.dat", "mggdb_0.25_7.dat", "mggdb_0.25_8.dat", 
+        "mggdb_0.25_9.dat", "mggdb_0.25_10.dat", "mgval_0.50_8B.dat", "mgval_0.50_8C.dat",
+        "mgval_0.50_9A.dat", "mgval_0.50_9B.dat", "mgval_0.50_9C.dat", "mgval_0.50_9D.dat", 
+        "mgval_0.50_10A.dat", "mgval_0.50_10B.dat", "mgval_0.50_10C.dat", "mgval_0.50_10D.dat"         
+    };
+
+    ofstream csv("resultados.csv");
+    if (!csv) {
+        cerr << "Erro ao criar resultados.csv\n";
+        return 1;
+    }
+
+	// Cabeçalho do csv
+    csv << "Arquivo,Veículos,Capacidade,Depósito,Num Vértices,Num Arestas,Num Arcos,Vértices Requeridos,Arestas Requeridas,Arcos Requeridos,"
+           "Densidade,Grau_Min,Grau_Max,Caminho_Medio,Diametro\n";
+
+    for (const auto& nomeArquivo : arquivos) {
+		try {
+			cout << "======= Lendo arquivo: " << nomeArquivo << " =======" << endl;
+
+			Grafo g = lerGrafoDeArquivo(nomeArquivo);
+			g.floydWarshall(); //se não fizer essa chamada, dá erro de segmentação e aí não calc nada q precisa das matrizes dist e pred
+
+			// Coletar estatísticas
+			int numVeiculos = g.getNumVeiculos();
+			int capacidade = g.getCapacidade();
+			int deposito = g.getDeposito();
+			int V = g.getNumVertices();
+			int E = g.getNumArestas();
+			int A = g.getNumArcos();
+			int ReqN = g.getNumVerticesRequeridos();
+			int ReqE = g.getNumArestasRequeridas();
+			int ReqA = g.getNumArcosRequeridos();
+			double densidade = g.calcularDensidade(V, E, A);
+			int grauMin = g.grauMinimo();
+			int grauMax = g.grauMaximo();
+			double caminhoMedio = g.calcularCaminhoMedio();
+			int diametro = g.calcularDiametro();
+
+			// Escrever no CSV
+			csv << nomeArquivo << "," << numVeiculos << "," << capacidade << "," << deposito << "," 
+				<< V << "," << E << "," << A << ","
+				<< ReqN << "," << ReqE << "," << ReqA << ","
+				<< fixed << setprecision(3)
+				<< densidade << "," << grauMin << "," << grauMax << ","
+				<< caminhoMedio << "," << diametro << "\n";
+				
+		} catch (const exception& e) {
+			cerr << "Erro ao processar " << nomeArquivo << ": " << e.what() << endl;
+			
+		} catch (...) {
+			cerr << "Erro desconhecido ao processar " << nomeArquivo << endl;
+		} 
+    }
+
+    csv.close();
+    cout << "Arquivo resultados.csv gerado com sucesso!\n";
+
     return 0;
 }
